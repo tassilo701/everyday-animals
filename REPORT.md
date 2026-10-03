@@ -1,5 +1,7 @@
-v0.86.0 Europe overlap pass. Settled 300px / FOV 42° / z=2.65 projection found eight marker pairs under the ~11px ring diameter. Safe water nudges moved benelux, nordics, switzerland, iberia, kosovo, slovenia, and san_marino; the readable country list remains the fallback.
+# Everyday Animals — REPORT
 
-Proof gaps (old → new px): Benelux—Netherlands 3.47 → 14.00; Nordics—Sweden 4.98 → 46.31; Switzerland—Liechtenstein 6.73 → 16.23; Iberia—Spain 6.80 → 39.19; Benelux—Belgium 6.90 → 20.39; North Macedonia—Kosovo 7.54 → 29.68; Croatia—Slovenia 7.59 → 26.96; Italy—San Marino 7.80 → 37.78.
+v0.87.0 separates eight continent-page marker pairs that were still under ~11px at the settled 300px / FOV 42° / z=2.65 view. Open-water nudges only. Pairs already separated in v0.84, v0.85, and v0.86 were left alone. The readable country list remains the fallback.
 
-npm run typecheck, npm run check:reliability, and npm run export:web are green. TEST.md, .nojekyll, and 404.html are preserved.
+Dominica—Guadeloupe 2.10→16.63; Antigua—Guadeloupe 2.13→14.01; St Kitts—Guadeloupe 3.10→16.23; Hong Kong—Macao 2.49→12.31; Gambia—Guinea-Bissau 2.57→12.68; Everyday Oceania—Australia 3.00→50.94; Israel—Jordan 3.64→13.87; Rwanda—Burundi 5.22→14.12 px.
+
+`npm run typecheck`, `npm run check:reliability`, and `npm run export:web` are green. `.nojekyll`, `404.html`, and `TEST.md` are preserved.
