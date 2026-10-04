@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Text check — Everyday Animals</title>
+  <style>
+    :root { --bg: #fbf6ee; --card: #fff; --ink: #26231f; --ink2: #6f685e; --bad: #e5484d; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.45 ui-rounded, system-ui, sans-serif; }
+    header { position: sticky; top: 0; z-index: 2; background: var(--bg); padding: 14px 16px 10px; border-bottom: 1px solid #0001; }
+    h1 { margin: 0; font-size: 20px; }
+    header p { margin: 4px 0 0; color: var(--ink2); }
+    input[type=search] { margin-top: 8px; width: 100%; max-width: 420px; font: inherit; padding: 8px 12px; border-radius: 99px; border: 1px solid #0002; }
+    .list { padding: 12px 16px 80px; display: grid; gap: 12px; max-width: 1100px; margin: 0 auto; }
+    .a { background: var(--card); border-radius: 16px; box-shadow: 0 1px 3px #0002; display: grid; grid-template-columns: 96px 1fr 1fr; gap: 12px; padding: 12px; }
+    .a img { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+    .a h3 { margin: 0 0 4px; font-size: 16px; }
+    .a ol { margin: 0; padding-left: 18px; }
+    .a .k { font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; color: var(--ink2); margin-top: 6px; }
+    .a.bad { outline: 3px solid var(--bad); }
+    label { font-size: 12px; color: var(--bad); display: inline-flex; gap: 4px; align-items: center; }
+    @media (max-width: 700px) { .a { grid-template-columns: 64px 1fr; } .a img { width: 64px; height: 64px; } .a .de { grid-column: 2; } }
+  </style>
+</head>
+<body>
+<header>
+  <h1>Text check · English / Deutsch</h1>
+  <p>Every animal’s name, sound word, three facts (little kids → teens), “try together” idea and look-alike note. Tick “fix” on anything wrong; your ticks stay on this device. <b id="n"></b></p>
+  <input type="search" id="q" placeholder="Search an animal…" />
+</header>
+<div class="list" id="list"></div>
+<script>
+  const base = location.pathname.replace(/qc\/texts\.html$/, '');
+  const KEY = 'ea.textcheck.v1';
+  const bad = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
+  const esc = (s) => String(s ?? '').replace(/[&<]/g, (c) => ({ '&': '&amp;', '<': '&lt;' })[c]);
+  const count = () => (document.getElementById('n').textContent = bad.size ? `${bad.size} marked: ${[...bad].join(' ')}` : '');
+  Promise.all([fetch(base + 'data/species.json').then((r) => r.json()), fetch(base + 'data/lang/de.json').then((r) => r.json())]).then(([species, de]) => {
+    const list = document.getElementById('list');
+    for (const s of species) {
+      const d = de[s.id] ?? {};
+      const el = document.createElement('div');
+      el.className = 'a' + (bad.has(s.id) ? ' bad' : '');
+      el.dataset.q = `${s.en} ${d.n ?? ''} ${s.sci}`.toLowerCase();
+      el.innerHTML = `<div><img src="${base + s.thumb}" alt=""><br><label><input type="checkbox" ${bad.has(s.id) ? 'checked' : ''}> fix</label></div>
+        <div><h3>${esc(s.en)} <small style="color:var(--ink2);font-weight:400"><i>${esc(s.sci)}</i></small></h3>
+          <div>“${esc(s.says ?? '—')}”</div><ol>${s.facts.map((f) => `<li>${esc(f)}</li>`).join('')}</ol>
+          <div class="k">Try together</div><div>${esc(s.ask[0])}</div>${s.twin ? `<div class="k">Don’t mix us up</div><div>${esc(s.twin[1])}</div>` : ''}</div>
+        <div class="de"><h3>${esc(d.n ?? '— fehlt —')}</h3>
+          <div>“${esc(d.s ?? (s.says ? '—' : '—'))}”</div><ol>${(d.f ?? []).map((f) => `<li>${esc(f)}</li>`).join('')}</ol>
+          <div class="k">Probiert es zusammen</div><div>${esc(d.a ?? '')}</div>${d.t ? `<div class="k">Nicht verwechseln</div><div>${esc(d.t)}</div>` : ''}</div>`;
+      el.querySelector('input').onchange = (e) => { e.target.checked ? bad.add(s.id) : bad.delete(s.id); el.classList.toggle('bad', e.target.checked); localStorage.setItem(KEY, JSON.stringify([...bad])); count(); };
+      list.appendChild(el);
+    }
+    document.getElementById('q').oninput = (e) => { const q = e.target.value.toLowerCase(); for (const el of list.children) el.style.display = !q || el.dataset.q.includes(q) ? '' : 'none'; };
+    count();
+  });
+</script>
+</body>
+</html>
