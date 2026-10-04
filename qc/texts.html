@@ -25,18 +25,23 @@
 </head>
 <body>
 <header>
-  <h1>Text check · English / Deutsch</h1>
-  <p>Every animal’s name, sound word, three facts (little kids → teens), “try together” idea and look-alike note. Tick “fix” on anything wrong; your ticks stay on this device. <b id="n"></b></p>
+  <h1>Text check · English / <select id="lang"><option value="de">Deutsch</option><option value="es">Español</option><option value="pt">Português (BR)</option><option value="zh">中文 + pinyin</option><option value="hi">हिन्दी</option></select></h1>
+  <p>Every animal’s name, sound word, three facts (little kids → teens), “try together” idea and look-alike note. Pick a language to compare. Tick “fix” on anything wrong; your ticks stay on this device. <b id="n"></b></p>
   <input type="search" id="q" placeholder="Search an animal…" />
 </header>
 <div class="list" id="list"></div>
 <script>
   const base = location.pathname.replace(/qc\/texts\.html$/, '');
-  const KEY = 'ea.textcheck.v1';
+  const L = new URLSearchParams(location.search).get('lang') || 'de';
+  const KEY = 'ea.textcheck.v1' + (L === 'de' ? '' : '.' + L);
+  document.getElementById('lang').value = L;
+  document.getElementById('lang').onchange = (e) => (location.search = '?lang=' + e.target.value);
+  const H = { de: ['Probiert es zusammen', 'Nicht verwechseln'], es: ['A probar juntos', 'No nos confundas'], pt: ['Vamos fazer juntos', 'Não nos confunda'], zh: ['一起试试', '别把我们弄混'], hi: ['साथ मिलकर करो', 'हमें मत मिलाओ'] }[L];
+  const pyl = (t) => (t ? `<div style="color:var(--ink2);font-size:12px">${esc(t)}</div>` : '');
   const bad = new Set(JSON.parse(localStorage.getItem(KEY) || '[]'));
   const esc = (s) => String(s ?? '').replace(/[&<]/g, (c) => ({ '&': '&amp;', '<': '&lt;' })[c]);
   const count = () => (document.getElementById('n').textContent = bad.size ? `${bad.size} marked: ${[...bad].join(' ')}` : '');
-  Promise.all([fetch(base + 'data/species.json').then((r) => r.json()), fetch(base + 'data/lang/de.json').then((r) => r.json())]).then(([species, de]) => {
+  Promise.all([fetch(base + 'data/species.json').then((r) => r.json()), fetch(base + `data/lang/${L}.json`).then((r) => r.json())]).then(([species, de]) => {
     const list = document.getElementById('list');
     for (const s of species) {
       const d = de[s.id] ?? {};
@@ -47,9 +52,9 @@
         <div><h3>${esc(s.en)} <small style="color:var(--ink2);font-weight:400"><i>${esc(s.sci)}</i></small></h3>
           <div>“${esc(s.says ?? '—')}”</div><ol>${s.facts.map((f) => `<li>${esc(f)}</li>`).join('')}</ol>
           <div class="k">Try together</div><div>${esc(s.ask[0])}</div>${s.twin ? `<div class="k">Don’t mix us up</div><div>${esc(s.twin[1])}</div>` : ''}</div>
-        <div class="de"><h3>${esc(d.n ?? '— fehlt —')}</h3>
-          <div>“${esc(d.s ?? (s.says ? '—' : '—'))}”</div><ol>${(d.f ?? []).map((f) => `<li>${esc(f)}</li>`).join('')}</ol>
-          <div class="k">Probiert es zusammen</div><div>${esc(d.a ?? '')}</div>${d.t ? `<div class="k">Nicht verwechseln</div><div>${esc(d.t)}</div>` : ''}</div>`;
+        <div class="de"><h3>${esc(d.n ?? '— missing —')}</h3>${pyl(d.py?.n)}
+          <div>“${esc(d.s ?? '—')}”</div>${pyl(d.py?.s)}<ol>${(d.f ?? []).map((f, i) => `<li>${esc(f)}${pyl(d.py?.f?.[i])}</li>`).join('')}</ol>
+          <div class="k">${H[0]}</div><div>${esc(d.a ?? '')}</div>${pyl(d.py?.a)}${d.t ? `<div class="k">${H[1]}</div><div>${esc(d.t)}</div>${pyl(d.py?.t)}` : ''}</div>`;
       el.querySelector('input').onchange = (e) => { e.target.checked ? bad.add(s.id) : bad.delete(s.id); el.classList.toggle('bad', e.target.checked); localStorage.setItem(KEY, JSON.stringify([...bad])); count(); };
       list.appendChild(el);
     }

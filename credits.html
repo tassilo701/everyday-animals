@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Credits — Everyday Animals</title>
+  <style>
+    :root { --bg: #fbf6ee; --card: #fff; --ink: #26231f; --ink2: #6f685e; --link: #2f6f6a; }
+    @media (prefers-color-scheme: dark) { :root { --bg: #0f1730; --card: #141f3b; --ink: #f1f3fa; --ink2: #a9b1c7; --link: #8fd3c9; } }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 ui-rounded, system-ui, sans-serif; }
+    main { max-width: 860px; margin: 0 auto; padding: 20px 16px 60px; }
+    h1 { margin: 0 0 6px; font-size: 24px; }
+    p { color: var(--ink2); margin: 0 0 12px; }
+    a { color: var(--link); }
+    input { width: 100%; max-width: 420px; font: inherit; padding: 8px 12px; border-radius: 99px; border: 1px solid #8884; background: var(--card); color: var(--ink); margin: 6px 0 14px; }
+    .a { background: var(--card); border-radius: 14px; padding: 10px 14px; margin-bottom: 10px; box-shadow: 0 1px 3px #0002; }
+    .a h2 { font-size: 16px; margin: 0 0 4px; }
+    .a h2 i { font-weight: 400; color: var(--ink2); }
+    ul { margin: 0; padding-left: 18px; font-size: 14px; }
+    li { overflow-wrap: anywhere; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Photo, sound &amp; video credits</h1>
+  <p>Every photo, sound and video in Everyday Animals was made by a naturalist or photographer who shared it under a free licence. Thank you!
+     Photos were resized and cropped, sounds trimmed and evened out in volume, videos shortened. Our edited versions are shared under the same licence as the original.
+     Where animals live: <a href="https://www.gbif.org">GBIF.org</a> occurrence records licensed CC0 or CC BY. Country borders: Natural Earth. <a href="licenses.txt">Open-source licences</a>.</p>
+  <input type="search" id="q" placeholder="Search an animal…" aria-label="Search an animal" />
+  <div id="list"></div>
+</main>
+<script>
+  const base = location.pathname.replace(/credits\.html$/, '');
+  const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  function licUrl(lic) {
+    const l = lic.toLowerCase().trim();
+    if (l === 'cc0') return 'https://creativecommons.org/publicdomain/zero/1.0/';
+    if (l === 'public domain') return 'https://creativecommons.org/publicdomain/mark/1.0/';
+    const m = l.match(/^cc (by(?:-sa)?)(?: (\d\.\d))?(?: ([a-z]{2}))?$/);
+    return m ? `https://creativecommons.org/licenses/${m[1]}/${m[2] ?? '4.0'}/${m[3] ? m[3] + '/' : ''}` : null;
+  }
+  const item = (kind, m) => {
+    const u = licUrl(m.lic);
+    const lic = u ? `<a href="${u}" rel="license">${esc(m.lic.toUpperCase())}</a>` : esc(m.lic.toUpperCase());
+    return `<li>${kind}: ${esc(m.by)} — ${lic} · <a href="${esc(m.page)}">original</a></li>`;
+  };
+  fetch(base + 'data/species.json').then((r) => r.json()).then((species) => {
+    const list = document.getElementById('list');
+    list.innerHTML = species.map((s) => `<div class="a" data-q="${esc((s.en + ' ' + s.sci).toLowerCase())}"><h2>${esc(s.en)} <i>${esc(s.sci)}</i></h2><ul>${
+      s.photos.map((p) => item('Photo', p)).join('') + (s.sound ? item('Sound', s.sound) : '') + (s.video ? item('Video', s.video) : '')}</ul></div>`).join('');
+    document.getElementById('q').oninput = (e) => {
+      const q = e.target.value.toLowerCase();
+      for (const el of list.children) el.style.display = !q || el.dataset.q.includes(q) ? '' : 'none';
+    };
+  });
+</script>
+</body>
+</html>
